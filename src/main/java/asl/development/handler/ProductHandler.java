@@ -24,6 +24,15 @@ public class ProductHandler {
                 );
     }
 
+    public Mono<ServerResponse> getAllProductsHandler(ServerRequest serverRequest){
+        return productService.getAllProducts()
+                .collectList()
+                .flatMap(productResponse -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .bodyValue(productResponse)
+                );
+    }
+
     public Mono<ServerResponse> createProductHandler(ServerRequest serverRequest){
         return serverRequest.bodyToMono(ProductRequest.class)
                 .flatMap(productService::createProduct)
