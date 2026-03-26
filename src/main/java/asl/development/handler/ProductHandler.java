@@ -1,6 +1,6 @@
 package asl.development.handler;
 
-import asl.development.domain.request.CreateProductRequest;
+import asl.development.domain.request.ProductRequest;
 import asl.development.service.IProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,10 +25,20 @@ public class ProductHandler {
     }
 
     public Mono<ServerResponse> createProductHandler(ServerRequest serverRequest){
-        return serverRequest.bodyToMono(CreateProductRequest.class)
+        return serverRequest.bodyToMono(ProductRequest.class)
                 .flatMap(productService::createProduct)
                 .flatMap(createResponse -> ServerResponse
                         .status(HttpStatus.CREATED)
+                        .bodyValue(createResponse)
+                );
+    }
+
+    public Mono<ServerResponse> updateProductHandler(ServerRequest serverRequest){
+        int productId = Integer.parseInt(serverRequest.pathVariable("id"));
+        return serverRequest.bodyToMono(ProductRequest.class)
+                .flatMap(productRequest -> productService.updateProduct(productId, productRequest))
+                .flatMap(createResponse -> ServerResponse
+                        .status(HttpStatus.OK)
                         .bodyValue(createResponse)
                 );
     }

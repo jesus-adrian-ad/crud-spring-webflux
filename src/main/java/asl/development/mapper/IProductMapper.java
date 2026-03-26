@@ -1,10 +1,9 @@
 package asl.development.mapper;
 
 import asl.development.domain.entity.Product;
-import asl.development.domain.request.CreateProductRequest;
+import asl.development.domain.request.ProductRequest;
 import asl.development.domain.response.ProductResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface IProductMapper {
@@ -13,6 +12,8 @@ public interface IProductMapper {
     @Mapping(target = "productPrice", source = "price")
     ProductResponse toResponse(Product product);
 
+    Product toEntity(ProductRequest productRequest);
 
-    Product toEntity(CreateProductRequest productRequest);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntityFromRequest(ProductRequest request, @MappingTarget Product entity);
 }

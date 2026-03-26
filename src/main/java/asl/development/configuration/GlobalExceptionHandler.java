@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.ServerCodecConfigurer;
+import org.springframework.r2dbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
@@ -65,6 +66,16 @@ public class GlobalExceptionHandler extends AbstractErrorWebExceptionHandler {
                         path
                 );
                 status = HttpStatus.NOT_FOUND;
+            }
+
+            case BadSqlGrammarException ignored -> {
+                response = new ErrorResponse(
+                        "Bad SQL Exception, please validate if database or table exists",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        now,
+                        path
+                );
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
             }
 
             default -> {
