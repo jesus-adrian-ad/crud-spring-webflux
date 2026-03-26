@@ -7,15 +7,15 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 @Configuration
 public class ProductRouterConfiguration {
 
     @Bean
     public RouterFunction<ServerResponse> productRoute(ProductHandler productHandler){
-        return RouterFunctions.route(GET("/products/{id}"), productHandler::productByIdHandler)
-                .andRoute(POST("/api/products"), productHandler::createProductHandler);
+        return RouterFunctions.route(GET("/api/products/{id}"), productHandler::productByIdHandler)
+                .andRoute(POST("/api/products"), productHandler::createProductHandler)
+                .andRoute(PUT("/api/products/{id}"), productHandler::updateProductHandler);
     }
 }

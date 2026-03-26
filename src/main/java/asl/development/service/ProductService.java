@@ -1,8 +1,8 @@
 package asl.development.service;
 
-import asl.development.domain.request.CreateProductRequest;
-import asl.development.domain.response.CreateProductResponse;
+import asl.development.domain.request.ProductRequest;
 import asl.development.domain.response.ProductResponse;
+import asl.development.domain.response.ProductResponseInfo;
 import asl.development.exception.CustomException;
 import asl.development.mapper.IProductMapper;
 import asl.development.repository.IProductRepository;
@@ -20,8 +20,9 @@ public class ProductService implements IProductService {
     private final IProductRepository productRepository;
     private final IProductMapper productMapper;
 
-    private static final String SAVED = "Customer Created Successfully";
+    private static final String SAVED = "Product Created Successfully";
     private static final String PRODUCT_NOT_FOUND = "Product not found";
+    private static final String PRODUCT_UPDATED = "Updated Product";
 
     @Override
     public Mono<ProductResponse> getProductById(int id){
@@ -31,14 +32,26 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Mono<CreateProductResponse> createProduct(CreateProductRequest createProductRequest){
+    public Mono<ProductResponseInfo> createProduct(ProductRequest createProductRequest){
         return Mono.just(productMapper.toEntity(createProductRequest))
                 .flatMap(productRepository::save)
                 .map(ignored ->
-                        new CreateProductResponse(
+                        new ProductResponseInfo(
                                 SAVED,
                                 HttpStatus.CREATED.value(),
                                 LocalDateTime.now())
                 );
+    }
+
+    @Override
+    public Mono<ProductResponseInfo> updateProduct(int id, ProductRequest productRequest){
+        return productRepository.findById(id)
+                .switchIfEmpty(Mono.error(new CustomException(PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND)))
+                .flatMap(product -> {
+                    productMapper.updateEntityFromRequest(productRequest, product);
+                    return productRepository.save(product);
+                })
+                .map(ignored ->
+                        new ProductResponseInfo(PRODUCT_UPDATED, HttpStatus.OK.value(), LocalDateTime.now()));
     }
 }

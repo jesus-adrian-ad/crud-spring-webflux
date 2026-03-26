@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateProductRequest {
+public class ProductRequest {
 
     private String name;
     private String price;
