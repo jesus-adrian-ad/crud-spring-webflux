@@ -17,6 +17,7 @@ public class ProductRouterConfiguration {
         return RouterFunctions.route(GET("/api/products/{id}"), productHandler::productByIdHandler)
                 .andRoute(POST("/api/products"), productHandler::createProductHandler)
                 .andRoute(PUT("/api/products/{id}"), productHandler::updateProductHandler)
-                .andRoute(GET("/api/products/"), productHandler::getAllProductsHandler);
+                .andRoute(GET("/api/products/"), productHandler::getAllProductsHandler)
+                .andRoute(DELETE("/api/products/{id}"), productHandler::deleteProductHandler);
     }
 }

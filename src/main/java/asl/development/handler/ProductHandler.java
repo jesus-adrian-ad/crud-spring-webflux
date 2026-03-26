@@ -46,9 +46,17 @@ public class ProductHandler {
         int productId = Integer.parseInt(serverRequest.pathVariable("id"));
         return serverRequest.bodyToMono(ProductRequest.class)
                 .flatMap(productRequest -> productService.updateProduct(productId, productRequest))
-                .flatMap(createResponse -> ServerResponse
+                .flatMap(updateResponse -> ServerResponse
                         .status(HttpStatus.OK)
-                        .bodyValue(createResponse)
+                        .bodyValue(updateResponse)
+                );
+    }
+    public Mono<ServerResponse> deleteProductHandler(ServerRequest serverRequest){
+        int productId = Integer.parseInt(serverRequest.pathVariable("id"));
+        return productService.deleteProduct(productId)
+                .flatMap(deleteResponse -> ServerResponse
+                        .status(HttpStatus.OK)
+                        .bodyValue(deleteResponse)
                 );
     }
 }
