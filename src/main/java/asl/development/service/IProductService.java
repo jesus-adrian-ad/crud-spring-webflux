@@ -15,4 +15,6 @@ public interface IProductService {
     Mono<ProductResponseInfo> createProduct(ProductRequest createProductRequest);
 
     Mono<ProductResponseInfo> updateProduct(int id, ProductRequest productRequest);
+
+    Mono<ProductResponseInfo> deleteProduct(int id);
 }

@@ -24,6 +24,7 @@ public class ProductService implements IProductService {
     private static final String SAVED = "Product Created Successfully";
     private static final String PRODUCT_NOT_FOUND = "Product not found";
     private static final String PRODUCT_UPDATED = "Updated Product";
+    private static final String PRODUCT_DELETED = "Deleted Product";
 
     @Override
     public Mono<ProductResponse> getProductById(int id){
@@ -60,5 +61,13 @@ public class ProductService implements IProductService {
                 })
                 .map(ignored ->
                         new ProductResponseInfo(PRODUCT_UPDATED, HttpStatus.OK.value(), LocalDateTime.now()));
+    }
+
+    @Override
+    public Mono<ProductResponseInfo> deleteProduct(int id){
+        return productRepository.findById(id)
+                .switchIfEmpty(Mono.error(new CustomException(PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND)))
+                .flatMap(productRepository::delete)
+                .then(Mono.fromCallable(() -> new ProductResponseInfo(PRODUCT_DELETED, HttpStatus.OK.value(), LocalDateTime.now())));
     }
 }
