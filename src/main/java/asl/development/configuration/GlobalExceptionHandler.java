@@ -2,6 +2,7 @@ package asl.development.configuration;
 
 import asl.development.domain.response.ErrorResponse;
 import asl.development.exception.CustomException;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.webflux.autoconfigure.error.AbstractErrorWebExceptionHandler;
 import org.springframework.boot.webflux.error.ErrorAttributes;
@@ -11,55 +12,72 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Objects;
 
+@NullMarked
 @Component
 @Order(-2)
 public class GlobalExceptionHandler extends AbstractErrorWebExceptionHandler {
 
     public GlobalExceptionHandler(ErrorAttributes errorAttributes,
                                   ApplicationContext applicationContext,
-                                  ServerCodecConfigurer codecConfigurer){
+                                  ServerCodecConfigurer codecConfigurer) {
         super(errorAttributes, new WebProperties.Resources(), applicationContext);
         this.setMessageWriters(codecConfigurer.getWriters());
         this.setMessageReaders(codecConfigurer.getReaders());
     }
 
     @Override
-    protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes){
+    protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
         return RouterFunctions.route(RequestPredicates.all(), this::handleError);
     }
 
     private Mono<ServerResponse> handleError(ServerRequest request) {
+        Throwable error = Objects.requireNonNull(getError(request));
 
-        Throwable error = getError(request);
+        Instant now = Instant.now();
+        String path = request.path();
 
-        if (error instanceof CustomException ex) {
-            ErrorResponse response = new ErrorResponse(
-                    ex.getMessage(),
-                    ex.getHttpStatus().value(),
-                    Instant.now(),
-                    request.path()
-            );
+        ErrorResponse response;
+        HttpStatus status;
 
-            return ServerResponse
-                    .status(ex.getHttpStatus())
-                    .bodyValue(response);
+        switch (error) {
+
+            case CustomException ex -> {
+                response = new ErrorResponse(
+                        ex.getMessage(),
+                        ex.getHttpStatus().value(),
+                        now,
+                        path
+                );
+                status = ex.getHttpStatus();
+            }
+
+            case NoResourceFoundException ignored -> {
+                response = new ErrorResponse(
+                        "Resource not found, please validate again",
+                        HttpStatus.NOT_FOUND.value(),
+                        now,
+                        path
+                );
+                status = HttpStatus.NOT_FOUND;
+            }
+
+            default -> {
+                response = new ErrorResponse(
+                        "Internal Server Error",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        now,
+                        path
+                );
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
         }
 
-        error.printStackTrace();
-
-        ErrorResponse response = new ErrorResponse(
-                "Internal Server Error",
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                Instant.now(),
-                request.path()
-        );
-
-        return ServerResponse
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .bodyValue(response);
+        return ServerResponse.status(status).bodyValue(response);
     }
 }
