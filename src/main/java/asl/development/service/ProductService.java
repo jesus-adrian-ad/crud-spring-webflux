@@ -9,6 +9,7 @@ import asl.development.repository.IProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -28,6 +29,12 @@ public class ProductService implements IProductService {
     public Mono<ProductResponse> getProductById(int id){
         return productRepository.findById(id)
                 .switchIfEmpty(Mono.error(new CustomException(PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND)))
+                .map(productMapper::toResponse);
+    }
+
+    @Override
+    public Flux<ProductResponse> getAllProducts(){
+        return productRepository.findAll()
                 .map(productMapper::toResponse);
     }
 
