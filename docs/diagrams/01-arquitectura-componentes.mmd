@@ -1,0 +1,49 @@
+%% Diagrama de componentes: como colaboran las piezas del servicio
+flowchart LR
+    subgraph CLIENTES["Clientes"]
+        SW["Swagger UI<br/>/swagger-ui.html"]
+        CLI["curl / Postman / Frontend"]
+    end
+
+    subgraph APP["asl-crud-spring-webflux &nbsp;&#58;9091"]
+        direction TB
+
+        subgraph WEB["Capa web (funcional)"]
+            RT["ProductRouterConfiguration<br/>RouterFunction + @RouterOperations"]
+            HD["ProductHandler<br/>ServerRequest &rarr; ServerResponse"]
+        end
+
+        subgraph NEG["Capa de negocio"]
+            IS["IProductService<br/>contrato"]
+            SV["ProductService<br/>reglas + errores de dominio"]
+            MP["IProductMapper<br/>MapStruct"]
+        end
+
+        subgraph DAT["Capa de datos"]
+            RP["IProductRepository<br/>ReactiveCrudRepository"]
+            EN["Product<br/>@Table products"]
+        end
+
+        subgraph TRANS["Transversal"]
+            EX["GlobalExceptionHandler<br/>@Order -2"]
+            OA["OpenApiConfiguration<br/>springdoc-openapi"]
+        end
+    end
+
+    DB[("PostgreSQL 17<br/>crud_db.public.products")]
+
+    SW  --> RT
+    CLI --> RT
+    RT  --> HD
+    HD  --> IS
+    IS  -.implementa.-> SV
+    SV  --> MP
+    SV  --> RP
+    RP  --> EN
+    RP  -- "R2DBC / no bloqueante" --> DB
+
+    SV  -. "CustomException" .-> EX
+    HD  -. "cualquier error" .-> EX
+    EX  -- "ErrorResponse JSON" --> CLIENTES
+    OA  -. "lee anotaciones" .-> RT
+    OA  -- "OpenAPI 3.1" --> SW

@@ -1,0 +1,33 @@
+%% Flujo reactivo de una peticion, del router a la base de datos
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    participant R as RouterFunction
+    participant H as ProductHandler
+    participant S as ProductService
+    participant M as IProductMapper
+    participant P as IProductRepository
+    participant D as PostgreSQL
+
+    C->>R: GET /api/products/1
+    R->>H: productByIdHandler(ServerRequest)
+    H->>H: lee el path variable id y lo convierte a int
+    H->>S: getProductById(1)
+    S->>P: findById(1)
+    P-->>D: SELECT ... WHERE product_id = 1
+    D-->>P: fila encontrada o resultado vacio
+
+    alt El producto existe
+        P-->>S: Mono de Product
+        S->>M: toResponse(Product)
+        M-->>S: ProductResponse
+        S-->>H: Mono de ProductResponse
+        H-->>C: 200 OK + ProductResponse
+    else No existe
+        P-->>S: Mono.empty
+        S-->>S: switchIfEmpty emite CustomException 404
+        S-->>H: Mono.error
+        H-->>C: 404 + ErrorResponse
+    end
+
+    Note over C,D: Ningun hilo se bloquea. La cadena completa<br/>es Mono/Flux sobre Reactor Netty + R2DBC

@@ -1,0 +1,20 @@
+%% Entorno local: la app orquesta su propia base de datos
+flowchart TB
+    DEV["Desarrollador<br/>mvn spring-boot:run"] --> BOOT
+
+    subgraph HOST["Maquina local"]
+        BOOT["Spring Boot 4.0.4<br/>spring-boot-docker-compose"]
+        APP["Reactor Netty&nbsp;&#58;9091<br/>Swagger UI + API"]
+
+        subgraph DOCKER["Docker Engine"]
+            PG["crud-webflux-postgres<br/>postgres:17-alpine&nbsp;&#58;5432"]
+            VOL[("crud-webflux-postgres-data<br/>volumen persistente")]
+        end
+    end
+
+    BOOT -- "1&#46; lee docker-compose.yml<br/>y levanta el servicio" --> PG
+    PG -- "2&#46; healthcheck pg_isready" --> BOOT
+    BOOT -- "3&#46; inyecta host/puerto/credenciales<br/>como R2dbcConnectionDetails" --> APP
+    APP -- "r2dbc:postgresql" --> PG
+    PG --- VOL
+    PG -. "solo en el primer arranque" .-> INIT["docker/init-db.sql<br/>crea tabla products + seed"]

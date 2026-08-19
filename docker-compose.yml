@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Infraestructura local del servicio asl-crud-spring-webflux
+#
+# Este archivo lo levanta AUTOMATICAMENTE la aplicacion gracias al modulo
+# `spring-boot-docker-compose` (ver pom.xml + application.properties).
+# Solo hace falta ejecutar la app; no es necesario correr `docker compose up`
+# como paso independiente.
+#
+# Aun asi, si quieres manejar la base de datos por tu cuenta:
+#   docker compose up -d      -> levanta Postgres en segundo plano
+#   docker compose down       -> apaga los contenedores
+#   docker compose down -v    -> apaga y BORRA los datos (vuelve a ejecutar init)
+# ---------------------------------------------------------------------------
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: crud-webflux-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crud_db
+      POSTGRES_USER: local
+      POSTGRES_PASSWORD: postgres
+      # Evita que un `docker compose down -v` deje datos huerfanos con otro locale
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      # Datos persistentes entre reinicios
+      - postgres-data:/var/lib/postgresql/data
+      # Scripts que Postgres ejecuta SOLO la primera vez (volumen vacio)
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+    healthcheck:
+      # Spring Boot espera a que el healthcheck este "healthy" antes de conectarse
+      test: [ "CMD-SHELL", "pg_isready -U local -d crud_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  postgres-data:
+    name: crud-webflux-postgres-data

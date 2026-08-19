@@ -21,6 +21,7 @@
     <r2dbc.postgresql.version>1.1.1.RELEASE</r2dbc.postgresql.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <lombok.version>1.18.44</lombok.version>
+    <springdoc.version>3.0.3</springdoc.version>
 
     <!-- Plugin Versions -->
     <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
@@ -67,6 +68,22 @@
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
     </dependency>
+
+    <!--DOCUMENTATION-->
+    <!-- Source: https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webflux-ui -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+
+    <!--LOCAL INFRASTRUCTURE-->
+    <!-- Arranca/detiene el docker-compose.yml junto con la aplicacion -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-docker-compose</artifactId>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 
   <build>
@@ -89,6 +106,19 @@
               <version>${mapstruct.version}</version>
             </path>
           </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

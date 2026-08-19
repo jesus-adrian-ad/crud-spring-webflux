@@ -1,0 +1,17 @@
+%% Como se traduce cualquier excepcion a un ErrorResponse
+flowchart TD
+    ERR["Excepcion emitida<br/>en la cadena reactiva"] --> GEH["GlobalExceptionHandler<br/>AbstractErrorWebExceptionHandler @Order -2"]
+
+    GEH --> SW{"switch pattern matching<br/>sobre el Throwable"}
+
+    SW -->|CustomException| C1["message = ex.getMessage()<br/>status = ex.getHttpStatus()"]
+    SW -->|NoResourceFoundException| C2["'Resource not found, please validate again'<br/>status = 404"]
+    SW -->|BadSqlGrammarException| C3["'Bad SQL Exception, please validate<br/>if database or table exists'<br/>status = 500"]
+    SW -->|default| C4["'Internal Server Error'<br/>status = 500"]
+
+    C1 --> OUT
+    C2 --> OUT
+    C3 --> OUT
+    C4 --> OUT
+
+    OUT["ErrorResponse<br/>message / statusCode / timestamp / path"] --> RESP["ServerResponse.status(status)<br/>application/json"]
